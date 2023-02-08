@@ -1,0 +1,81 @@
+simulated_reads='_sample0_aligned_reads.fastq _sample0_unaligned_reads.fastq _sample0_aligned_error_profile'
+outdir='sm_autobin_output/'
+prefix='mgERR'
+
+rule all:
+	input:
+		"bins/metabat2/mags/unbinned.fa"
+
+rule simulate_nanopore_reads:
+	params:
+		config_dir="../nano_config/",
+		coverage="1",
+		input_dir="/athena/ihlab/store/miw4007/simulation_test/input_seq/cleaned_seqs/2Spec/",
+		error_profile="/athena/ihlab/store/miw4007/simulation_test/err_profs/metagenome_ERR3152364_Even/metagenome_ERR3152364_Even",
+		outdir='sm_autobin_output/',
+		prefix='mgERR',
+		simulated_reads='_sample0_aligned_reads.fastq _sample0_unaligned_reads.fastq _sample0_aligned_error_profile'
+	output:
+		"sm_autobin_output/mgERR_sample0_aligned_reads.fastq"
+	shell:
+		"""
+		source ~/anaconda3/etc/profile.d/conda.sh
+		conda activate nanosim_env
+		echo 'asdfsaf'
+		python ../simulate_nano.py --inputdir {params.input_dir} --coverage {params.coverage} --configdir {params.config_dir} --profile {params.error_profile} --outdir {params.outdir}{params.prefix}
+		"""
+
+rule convert_fastq_to_fasta:
+	input:
+		"sm_autobin_output/mgERR_sample0_aligned_reads.fastq"
+	output:
+		aligned_fasta="sm_autobin_output/mgERR_sample0_aligned_reads.fasta"
+	params:
+		reads_prefix="sm_autobin_output/mgERR_sample0_aligned_reads.fast"
+	shell:
+		"sed -n \'1~4s/^@/>/p;2~4p\' \"{params.reads_prefix}q\" > \"{output}\""
+
+rule art_illumina_sim:
+	input:
+		"sm_autobin_output/mgERR_sample0_aligned_reads.fasta"
+	output:
+		"ART_reads/illumina_sim1.fq",
+		"ART_reads/illumina_sim2.fq"
+	shell:
+		"""
+		mkdir ART_reads
+		conda deactivate
+		conda activate ART_env
+		art_illumina -p -sam -i {input} -o ART_reads/illumina_sim -l 50 -f 20 -m 200 -s 10
+		"""
+
+rule metabat2:
+	input:
+		"ART_reads/illumina_sim1.fq",
+		"ART_reads/illumina_sim2.fq"
+	output:
+		"bins/metabat2/mags/unbinned.fa"
+	shell:
+		"""
+		conda deactivate
+		conda activate metabat2_env
+		mkdir bins
+		cd bins
+		bash /athena/ihlab/store/miw4007/simulation_test/tools/metabat2.sh ../sm_autobin_output/mgERR_sample0_aligned_reads.fastq ../bins/metabat2/mags metabat2_bins.tsv metabat2
+		"""
+
+rule AMBER:
+	input:
+		"bins/metabat2/mags/unbinned.fa"
+	output:
+		""
+	shell:
+		"""
+		cd ../
+		mkdir AMBER_results
+		cd AMBER_results
+		
+		python /athena/ihlab/store/miw4007/simulation_test/tools/get_bin_mappings.py ../sm_autobin_output/mgERR_sample0_aligned_reads.fasta bins/metabat2/mags metabat2_bins.tsv metabat2
+		
+		amber.py -g gsa_mapping.binning metabat2_bins.tsv -o .
+		"""
