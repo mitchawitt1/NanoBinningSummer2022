@@ -1,0 +1,45 @@
+configfile: "config.yaml"
+
+rule all:
+	input:
+		"ART_reads/illumina_sim1.fq",
+		"ART_reads/illumina_sim2.fq"
+
+rule simulate_nanopore_reads:
+	params:
+		config_dir=config["config_dir"],
+		coverage=config["coverage"],
+		error_profile=config["error_profile"],
+		outdir=config["sim_outdir"],
+		prefix=config["reads_prefix"],
+		reference_genomes=config["reference_genomes"]
+	output:
+		expand("{outdir}{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+	shell:
+		"""
+		source ~/anaconda3/etc/profile.d/conda.sh
+		conda activate nanosim_env
+		python /athena/ihlab/scratch/miw4007/simulation_test/tools/simulate_nano.py --inputdir {params.reference_genomes} --coverage {params.coverage} --configdir {params.config_dir} --profile {params.error_profile} --outdir {params.outdir}{params.prefix}
+		"""
+
+rule convert_fastq_to_fasta:
+	input:
+		expand("{outdir}{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+	output:
+		expand("{outdir}{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+	shell:
+		"sed -n \'1~4s/^@/>/p;2~4p\' \"{input}\" > \"{output}\""
+
+rule art_illumina_sim:
+	input:
+		expand("{outdir}{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+	output:
+		"ART_reads/illumina_sim1.fq",
+		"ART_reads/illumina_sim2.fq"
+	shell:
+		"""	
+		source ~/anaconda3/etc/profile.d/conda.sh
+		mkdir ART_reads/ || true
+		conda activate ART_env
+		art_illumina -p -sam -i {input} -o ART_reads/illumina_sim -l 50 -f 20 -m 200 -s 10
+		"""
