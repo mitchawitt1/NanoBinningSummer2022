@@ -1,0 +1,49 @@
+configfile: "config.yaml"
+
+rule all:
+	input:
+		"AMBER_results/metabat2_bins.tsv"
+
+rule metabat2:
+	input:
+		reads1=expand("{simulation_dir}/ART_reads/illumina_sim1.fq",simulation_dir=config["simulation_dir"]),
+		reads2=expand("{simulation_dir}/ART_reads/illumina_sim2.fq", simulation_dir=config["simulation_dir"])
+	output:
+		"bins/metabat2/mags/unbinned.fa"
+	params:
+		simulation_dir=config["simulation_dir"],
+		reads_prefix=config["reads_prefix"],
+		outdir=config["sim_outdir"]
+	shell:
+		"""
+		source ~/anaconda3/etc/profile.d/conda.sh	
+		conda deactivate
+		conda activate metabat2_env
+		mkdir bins || true
+		cd bins
+		
+		bash /athena/ihlab/store/miw4007/simulation_test/tools/metabat2.sh {params.simulation_dir}/{params.outdir}{params.reads_prefix}_sample0_aligned_reads.fastq {params.simulation_dir}/{input.reads1} {params.simulation_dir}/{input.reads2} metabat2
+		
+		cd ../
+		"""
+
+rule AMBER:
+	input:
+		"bins/metabat2/mags/unbinned.fa"
+	output:
+		"AMBER_results/metabat2_bins.tsv"
+	params:
+		simulation_dir=config["simulation_dir"],
+		reads_prefix=config["reads_prefix"],
+		sim_outdir=config["sim_outdir"]
+	shell:
+		"""
+		source ~/anaconda3/etc/profile.d/conda.sh
+		conda activate AMBER_env
+		mkdir AMBER_results || true
+		cd AMBER_results
+		
+		python /athena/ihlab/scratch/miw4007/simulation_test/tools/get_bin_mappings.py {params.simulation_dir}/{params.sim_outdir}{params.reads_prefix}_sample0_aligned_reads.fasta ../bins/metabat2/mags metabat2_bins.tsv metabat2
+		
+		amber.py -g gsa_mapping.binning metabat2_bins.tsv -o .
+		"""
