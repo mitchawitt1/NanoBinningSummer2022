@@ -17,11 +17,11 @@ rule metabat2:
 		autobin_dir=config["autobin_dir"],
 		reads_prefix=config["reads_prefix"],
 		nanopore_reads=config["nanopore_reads"]
+	conda:
+		"metabat2_env"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh	
-		conda deactivate
-		conda activate metabat2_env
 		mkdir {params.autobin_dir}/metabat2_bins || true
 		cd {params.autobin_dir}/metabat2_bins
 		
@@ -37,10 +37,11 @@ rule metabat2_to_AMBER_readable:
 		autobin_dir=config["autobin_dir"],
 		reads_prefix=config["reads_prefix"],
 		nanopore_reads=config["nanopore_reads"]
+	conda:
+		"AMBER_env"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate AMBER_env
 		mkdir {params.nanopore_reads}/AMBER_results || true
 		cd {params.autobin_dir}/AMBER_results
 		
@@ -56,10 +57,11 @@ rule minimap_alignment:
 		autobin_dir=config["autobin_dir"]
 	output:
 		expand("{autobin_dir}/minimap2/{sam_file}.sam", autobin_dir=config["autobin_dir"], sam_file=config["mm2_alignment_prefix"])
+	conda:
+		"minimap2"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate minimap2
 		mkdir {params.autobin_dir}/minimap2 || true
 		minimap2 -ax map-ont --secondary=no --sam-hit-only {params.refseq_genome} {input} > {output}
 		"""
@@ -86,10 +88,11 @@ rule f2_to_AMBER_readable:
 		nanopore_reads=config["nanopore_reads"]
 	output:
 		expand("{autobin_dir}/AMBER_results/{sam_file}.tsv", autobin_dir=config["autobin_dir"], sam_file=config["mm2_alignment_prefix"])
+	conda:
+		"AMBER_env"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate AMBER_env
 
 		python /athena/ihlab/scratch/miw4007/simulation_test/tools/get_bin_mappings_species.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {input} {output} minimap2
 
@@ -104,10 +107,11 @@ rule CATBAT:
 		tax_database=config["tax_database"]
 	output:
 		expand("{autobin_dir}/CATBAT/out.CAT.ORF2LCA.txt", autobin_dir=config["autobin_dir"])
+	conda:
+		"CAT_env"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate CAT_env
 		mkdir {params.autobin_dir}/CATBAT/ || true
 		cd {params.autobin_dir}/CATBAT/
 		CAT contigs -c {input} -d {params.CAT_database} -t {params.tax_database} --quiet --force --block_size 0.1 --tmpdir temp_CATBAT --nproc 6 &> run.log
@@ -122,10 +126,11 @@ rule CATBAT_to_AMBER_readable:
 		nanopore_reads=config["nanopore_reads"]
 	output:
 		expand("{autobin_dir}/AMBER_results/CATBAT_bins.tsv", autobin_dir=config["autobin_dir"])
+	conda:
+		"AMBER_env"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate AMBER_env	
 		mkdir {params.autobin_dir}/AMBER_results || true
 
 		python /athena/ihlab/scratch/miw4007/simulation_test/tools/get_bin_mappings_species.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {input} {output} CATBAT
@@ -141,10 +146,11 @@ rule AMBER:
 	params:
 		autobin_dir=config["autobin_dir"],
 		gold_standard=config["autobin_dir"] + "/AMBER_results/gsa_mapping.binning"
+	conda:
+		"AMBER_env"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate AMBER_env
 		#mkdir AMBER_results || true
 		#cd AMBER_results
 		
