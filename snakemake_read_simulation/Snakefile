@@ -2,8 +2,8 @@ configfile: "config.yaml"
 
 rule all:
 	input:
-		"ART_reads/illumina_sim1.fq",
-		"ART_reads/illumina_sim2.fq"
+		expand("{outdir}/ART_reads/illumina_sim1.fq", outdir=config["sim_outdir"]),
+		expand("{outdir}/ART_reads/illumina_sim2.fq", outdir=config["sim_outdir"])
 
 rule simulate_nanopore_reads:
 	params:
@@ -14,32 +14,37 @@ rule simulate_nanopore_reads:
 		prefix=config["reads_prefix"],
 		reference_genomes=config["reference_genomes"]
 	output:
-		expand("{outdir}{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
 		conda activate nanosim_env
-		python /athena/ihlab/scratch/miw4007/simulation_test/tools/simulate_nano.py --inputdir {params.reference_genomes} --coverage {params.coverage} --configdir {params.config_dir} --profile {params.error_profile} --outdir {params.outdir}{params.prefix}
+		mkdir {params.outdir}/nanopore_reads || true
+		cd {params.outdir}/nanopore_reads
+
+		python /athena/ihlab/scratch/miw4007/simulation_test/tools/simulate_nano.py --inputdir {params.reference_genomes} --coverage {params.coverage} --configdir {params.config_dir} --profile {params.error_profile} --outdir {params.prefix}
 		"""
 
 rule convert_fastq_to_fasta:
 	input:
-		expand("{outdir}{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	output:
-		expand("{outdir}{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	shell:
 		"sed -n \'1~4s/^@/>/p;2~4p\' \"{input}\" > \"{output}\""
 
 rule art_illumina_sim:
 	input:
-		expand("{outdir}{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+	params:
+		illumina_sim_dir=expand("{outdir}/ART_reads", outdir=config["sim_outdir"])
 	output:
-		"ART_reads/illumina_sim1.fq",
-		"ART_reads/illumina_sim2.fq"
+		expand("{outdir}/ART_reads/illumina_sim1.fq", outdir=config["sim_outdir"]),
+		expand("{outdir}/ART_reads/illumina_sim2.fq", outdir=config["sim_outdir"])
 	shell:
 		"""	
 		source ~/anaconda3/etc/profile.d/conda.sh
-		mkdir ART_reads/ || true
+		mkdir {params.illumina_sim_dir} || true
 		conda activate ART_env
-		art_illumina -p -sam -i {input} -o ART_reads/illumina_sim -l 50 -f 20 -m 200 -s 10
+		art_illumina -p -sam -i {input} -o {params.illumina_sim_dir}/illumina_sim -l 50 -f 20 -m 200 -s 10
 		"""
