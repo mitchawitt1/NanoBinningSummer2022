@@ -29,7 +29,7 @@ def write_gsa(simulated_reads_path):
                 gsa.write(record.id + "\t" + bin_id + "\t" + str(len(record.seq)) + "\n")
 
 def write_mappings_metabat2(bins_path, out_dir):
-    script = ['python', '/athena/ihlab/store/miw4007/simulation_test/tools/AMBER/src/utils/convert_fasta_bins_to_biobox_format.py']
+    script = ['python', '/athena/ihlab/scratch/miw4007/simulation_test/tools/AMBER/src/utils/convert_fasta_bins_to_biobox_format.py']
     files = os.listdir(bins_path)
     #print(files)
     metabat2_bin_regex = "bin\.[0-9]*\.fa"
@@ -61,15 +61,17 @@ def write_mappings_catbat(tax_path, out_dir):
     bin_map_file = out_dir
     CAT_tax_path = tax_path
     taxonomy_scores = {}
-
+    tax_level = 9
     with open(CAT_tax_path) as tax_file:
         tax_file_reader = csv.reader(tax_file, delimiter="\t")
         tax_file_reader.__next__()
         for line in tax_file_reader:
             if len(line) == 4:
                 lineage = line[2].split(";")
-                if (len(lineage) > 8): ### CHANGE BACK TO 9, THE SPECIES LEVEL
-                    speciesID = lineage[8]
+                if (len(lineage) > tax_level): ### CHANGE BACK TO 9, THE SPECIES LEVEL
+                    print(lineage)
+                    print(len(lineage))
+                    speciesID = lineage[tax_level]
                     index = line[0].rfind('_')
                     bit_score = float(line[3])
                     read_header = line[0][:index]
@@ -98,7 +100,7 @@ def main(args):
     elif (args[3] == "CATBAT"):
         write_mappings_catbat(args[1], args[2])
     elif (args[3] == "minimap2"):
-	write_mappings_mm2(args[1], args[2])
+        write_mappings_mm2(args[1], args[2])
 
 if __name__ == "__main__":
     main(sys.argv[1:])

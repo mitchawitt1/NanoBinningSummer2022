@@ -35,9 +35,11 @@ def write_mappings_metabat2(bins_path, out_dir):
     metabat2_bin_regex = "bin\.[0-9]*\.fa"
     for f in files:
         if re.match(metabat2_bin_regex, f):
+            print(f)
             script.append(os.path.join(bins_path, f))
     script.append('-o')
     script.append(out_dir)
+    print(script)
     subprocess.call(script)
 
 def write_mappings_catbat(tax_path, out_dir):
@@ -73,6 +75,7 @@ def write_mappings_catbat(tax_path, out_dir):
             max_score_index = np.argmax(np.array(scores))
             max_species_id = species_ids[max_score_index]
             bin_map.write(read + "\t" + max_species_id + "\n")
+
 
 def main(args):
     write_gsa(args[0])
