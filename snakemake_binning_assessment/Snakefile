@@ -2,157 +2,53 @@ configfile: "config.yaml"
 
 rule all:
 	input:
-		#config["autobin_dir"] + "/AMBER_results/metabat2_bins.tsv",
-		#config["autobin_dir"] + "/AMBER_results/CATBAT_bins.tsv"
-		#config["autobin_dir"] + "/AMBER_results/mm2_mapping.tsv"
-		config["autobin_dir"] + "/AMBER_results/index.html"
+		expand("{outdir}/ART_reads/illumina_sim1.fq", outdir=config["sim_outdir"]),
+		expand("{outdir}/ART_reads/illumina_sim2.fq", outdir=config["sim_outdir"])
 
-rule metabat2:
-	input:
-		reads1=expand("{autobin_dir}/ART_reads/illumina_sim1.fq", autobin_dir=config["autobin_dir"]),
-		reads2=expand("{autobin_dir}/ART_reads/illumina_sim2.fq", autobin_dir=config["autobin_dir"])
-	output:
-		expand("{autobin_dir}/metabat2_bins/metabat2/mags/unbinned.fa", autobin_dir=config["autobin_dir"])
+rule simulate_nanopore_reads:
 	params:
-		autobin_dir=config["autobin_dir"],
-		reads_prefix=config["reads_prefix"],
-		nanopore_reads=config["nanopore_reads"]
+		config_dir=config["config_dir"],
+		coverage=config["coverage"],
+		error_profile=config["error_profile"],
+		outdir=config["sim_outdir"],
+		prefix=config["reads_prefix"],
+		reference_genomes=config["reference_genomes"]
+	output:
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	conda:
-		"metabat2_env"
+		"nanosim_env"
 	shell:
 		"""
-		source ~/anaconda3/etc/profile.d/conda.sh	
-		mkdir {params.autobin_dir}/metabat2_bins || true
-		cd {params.autobin_dir}/metabat2_bins
+		source ~/anaconda3/etc/profile.d/conda.sh
+		conda activate nanosim_env
+		mkdir {params.outdir}/nanopore_reads || true
+		cd {params.outdir}/nanopore_reads
 		
-		bash /athena/ihlab/store/miw4007/simulation_test/tools/metabat2.sh {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fastq {input.reads1} {input.reads2} metabat2
+		python /athena/ihlab/scratch/miw4007/simulation_test/tools/simulate_nano.py --inputdir {params.reference_genomes} --coverage {params.coverage} --configdir {params.config_dir} --profile {params.error_profile} --outdir {params.prefix}
 		"""
 
-rule metabat2_to_AMBER_readable:
+rule convert_fastq_to_fasta:
 	input:
-		config["autobin_dir"] + "/metabat2_bins/metabat2/mags/unbinned.fa"
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	output:
-		config["autobin_dir"] + "/AMBER_results/metabat2_bins.tsv"
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
+	shell:
+		"sed -n \'1~4s/^@/>/p;2~4p\' \"{input}\" > \"{output}\""
+
+rule art_illumina_sim:
+	input:
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	params:
-		autobin_dir=config["autobin_dir"],
-		reads_prefix=config["reads_prefix"],
-		nanopore_reads=config["nanopore_reads"]
+		illumina_sim_dir=expand("{outdir}/ART_reads", outdir=config["sim_outdir"])
+	output:
+		expand("{outdir}/ART_reads/illumina_sim1.fq", outdir=config["sim_outdir"]),
+		expand("{outdir}/ART_reads/illumina_sim2.fq", outdir=config["sim_outdir"])
 	conda:
-		"AMBER_env"
+		"ART_env"
 	shell:
-		"""
+		"""	
 		source ~/anaconda3/etc/profile.d/conda.sh
-		mkdir {params.nanopore_reads}/AMBER_results || true
-		cd {params.autobin_dir}/AMBER_results
-		
-		python /athena/ihlab/scratch/miw4007/simulation_test/tools/get_bin_mappings_species.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta ../metabat2_bins/metabat2/mags {output} metabat2
-		#cd ../	
-		"""
-
-rule minimap_alignment:
-	input:
-		expand("{autobin_dir}/{nanopore_reads}/{reads_prefix}_sample0_aligned_reads.fasta", autobin_dir=config["autobin_dir"], nanopore_reads=config["nanopore_reads"], reads_prefix=config["reads_prefix"])
-	params:
-		refseq_genome=config["refseq_genome"],
-		autobin_dir=config["autobin_dir"]
-	output:
-		expand("{autobin_dir}/minimap2/{sam_file}.sam", autobin_dir=config["autobin_dir"], sam_file=config["mm2_alignment_prefix"])
-	conda:
-		"minimap2"
-	shell:
-		"""
-		source ~/anaconda3/etc/profile.d/conda.sh
-		mkdir {params.autobin_dir}/minimap2 || true
-		minimap2 -ax map-ont --secondary=no --sam-hit-only {params.refseq_genome} {input} > {output}
-		"""
-
-rule sam_to_f2:
-	input:
-		expand("{autobin_dir}/minimap2/{sam_file}.sam", autobin_dir=config["autobin_dir"], sam_file=config["mm2_alignment_prefix"])
-	params:
-		ncbi_tax_nodes=config["ncbi_tax_nodes"],
-		tax_level=config["tax_level"]
-	output:
-		expand("{autobin_dir}/minimap2/{sam_file}.f2", autobin_dir=config["autobin_dir"], sam_file=config["mm2_alignment_prefix"])
-	shell:
-		"""
-		python /athena/ihlab/store/miw4007/simulation_test/tools/sam_to_f2.py {input} {output} {params.ncbi_tax_nodes} {params.tax_level}
-		"""
-
-rule f2_to_AMBER_readable:
-	input:
-		expand("{autobin_dir}/minimap2/{sam_file}.f2", autobin_dir=config["autobin_dir"], sam_file=config["mm2_alignment_prefix"])
-	params:
-		autobin_dir=config["autobin_dir"],
-		reads_prefix=config["reads_prefix"],
-		nanopore_reads=config["nanopore_reads"]
-	output:
-		expand("{autobin_dir}/AMBER_results/{sam_file}.tsv", autobin_dir=config["autobin_dir"], sam_file=config["mm2_alignment_prefix"])
-	conda:
-		"AMBER_env"
-	shell:
-		"""
-		source ~/anaconda3/etc/profile.d/conda.sh
-
-		python /athena/ihlab/scratch/miw4007/simulation_test/tools/get_bin_mappings_species.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {input} {output} minimap2
-
-		"""
-
-rule CATBAT:
-	input:
-		expand("{autobin_dir}/{nanopore_reads}/{reads_prefix}_sample0_aligned_reads.fasta", autobin_dir=config["autobin_dir"], nanopore_reads=config["nanopore_reads"], reads_prefix=config["reads_prefix"])
-	params:
-		autobin_dir=config["autobin_dir"],
-		CAT_database=config["CAT_database"],
-		tax_database=config["tax_database"]
-	output:
-		expand("{autobin_dir}/CATBAT/out.CAT.ORF2LCA.txt", autobin_dir=config["autobin_dir"])
-	conda:
-		"CAT_env"
-	shell:
-		"""
-		source ~/anaconda3/etc/profile.d/conda.sh
-		mkdir {params.autobin_dir}/CATBAT/ || true
-		cd {params.autobin_dir}/CATBAT/
-		CAT contigs -c {input} -d {params.CAT_database} -t {params.tax_database} --quiet --force --block_size 0.1 --tmpdir temp_CATBAT --nproc 6 &> run.log
-		"""
-
-rule CATBAT_to_AMBER_readable:
-	input:
-		expand("{autobin_dir}/CATBAT/out.CAT.ORF2LCA.txt", autobin_dir=config["autobin_dir"])
-	params:
-		autobin_dir=config["autobin_dir"],
-		reads_prefix=config["reads_prefix"],
-		nanopore_reads=config["nanopore_reads"]
-	output:
-		expand("{autobin_dir}/AMBER_results/CATBAT_bins.tsv", autobin_dir=config["autobin_dir"])
-	conda:
-		"AMBER_env"
-	shell:
-		"""
-		source ~/anaconda3/etc/profile.d/conda.sh
-		mkdir {params.autobin_dir}/AMBER_results || true
-
-		python /athena/ihlab/scratch/miw4007/simulation_test/tools/get_bin_mappings_species.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {input} {output} CATBAT
-
-		"""
-rule AMBER:
-	input:
-		mb2=config["autobin_dir"] + "/AMBER_results/metabat2_bins.tsv",
-		cb=config["autobin_dir"] + "/AMBER_results/CATBAT_bins.tsv",
-		mm2=config["autobin_dir"] + "/AMBER_results/mm2_mapping.tsv"
-	output:
-		expand("{autobin_dir}/AMBER_results/index.html", autobin_dir=config["autobin_dir"])
-	params:
-		autobin_dir=config["autobin_dir"],
-		gold_standard=config["autobin_dir"] + "/AMBER_results/gsa_mapping.binning"
-	conda:
-		"AMBER_env"
-	shell:
-		"""
-		source ~/anaconda3/etc/profile.d/conda.sh
-		#mkdir AMBER_results || true
-		#cd AMBER_results
-		
-		amber.py -g {params.gold_standard} {input.mb2} {input.cb} {input.mm2} -o {params.autobin_dir}/AMBER_results/
+		conda activate ART_env
+		mkdir {params.illumina_sim_dir} || true
+		art_illumina -p -sam -i {input} -o {params.illumina_sim_dir}/illumina_sim -l 50 -f 20 -m 200 -s 10
 		"""
