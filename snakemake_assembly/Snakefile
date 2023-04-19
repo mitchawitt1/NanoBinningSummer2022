@@ -58,9 +58,8 @@ rule raw_flye_assembly:
 		source ~/anaconda3/etc/profile.d/conda.sh
 		conda activate flye_env
 		mkdir {params.nanopore_reads}/flye_assembly || true
-		cd {params.autobin_dir}/flye_assembly
 		
-		flye --nano-raw {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta --out-dir . --threads 4
+		flye --nano-raw {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta --out-dir {params.autobin_dir}/flye_assembly --threads 4
 		"""
 
 
