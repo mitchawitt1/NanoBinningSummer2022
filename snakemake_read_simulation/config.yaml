@@ -1,6 +1,6 @@
 config_dir: "../nano_config"
 reads_prefix: "mgERR"
 coverage: 0.1
-reference_genomes: "/athena/ihlab/store/miw4007/simulation_test/input_seq/cleaned_seqs/10Spec"
+reference_genomes: "/athena/ihlab/store/miw4007/simulation_test/input_seq/cleaned_seqs/"
 error_profile: "/athena/ihlab/store/miw4007/simulation_test/err_profs/metagenome_ERR3152364_Even/metagenome_ERR3152364_Even"
-sim_outdir: "10S0.1C_autobin_output_2"
+sim_outdir: "100S0.1C_autobin_output_1"
