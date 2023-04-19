@@ -22,7 +22,7 @@ rule mm2_map_to_bin:
 		source ~/anaconda3/etc/profile.d/conda.sh
 		mkdir {params.autobin_dir}/minimap2/mm2_bins/ || true
 
-		python /athena/ihlab/scratch/miw4007/simulation_test/tools/mm2_mapping_to_bins.py {params.autobin_dir}/AMBER_results/mm2_mapping.tsv {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {params.autobin_dir}/minimap2/mm2_bins/
+		python ../tools/mm2_mapping_to_bins.py {params.autobin_dir}/AMBER_results/mm2_mapping.tsv {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {params.autobin_dir}/minimap2/mm2_bins/
 		"""
 
 rule CATBAT_map_to_bin:
@@ -38,7 +38,7 @@ rule CATBAT_map_to_bin:
 		"""
 		mkdir {params.autobin_dir}/minimap2/mm2_bins/ || true
 
-		python /athena/ihlab/scratch/miw4007/simulation_test/tools/CATBAT_mapping_to_bins.py {params.autobin_dir}/AMBER_results/CATBAT_bins.tsv {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {params.autobin_dir}/CATBAT/CATBAT_bins/
+		python ../tools/CATBAT_mapping_to_bins.py {params.autobin_dir}/AMBER_results/CATBAT_bins.tsv {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {params.autobin_dir}/CATBAT/CATBAT_bins/
 		"""
 
 
@@ -79,7 +79,7 @@ rule mm2_flye_assembly:
 		conda activate flye_env
 		mkdir {params.autobin_dir}/minimap2/flye_assembly/ || true
 		
-		bash /athena/ihlab/scratch/miw4007/simulation_test/tools/snakemake_assembly/meta_assembly.sh {params.autobin_dir}/minimap2/mm2_bins/ {params.autobin_dir}/minimap2/flye_assembly/
+		bash  ../tools/snakemake_assembly/meta_assembly.sh {params.autobin_dir}/minimap2/mm2_bins/ {params.autobin_dir}/minimap2/flye_assembly/
 		"""
 
 
@@ -98,7 +98,7 @@ rule CATBAT_flye_assembly:
 		conda activate flye_env
 		mkdir {params.autobin_dir}/CATBAT/flye_assembly/ || true
 		
-		bash /athena/ihlab/scratch/miw4007/simulation_test/tools/snakemake_assembly/meta_assembly.sh {params.autobin_dir}/CATBAT/CATBAT_bins/ {params.autobin_dir}/CATBAT/flye_assembly/
+		bash ../tools/snakemake_assembly/meta_assembly.sh {params.autobin_dir}/CATBAT/CATBAT_bins/ {params.autobin_dir}/CATBAT/flye_assembly/
 		"""
 
 rule CATBAT_quast:
@@ -116,7 +116,7 @@ rule CATBAT_quast:
 		conda activate quast_env
 		#cd {params.autobin_dir}/CATBAT/flye_assembly
 	
-		bash /athena/ihlab/scratch/miw4007/simulation_test/tools/snakemake_assembly/meta_quast.sh {params.autobin_dir}/CATBAT/CATBAT_bins/ {params.autobin_dir}/CATBAT/flye_assembly/
+		bash ../tools/snakemake_assembly/meta_quast.sh {params.autobin_dir}/CATBAT/CATBAT_bins/ {params.autobin_dir}/CATBAT/flye_assembly/
 		"""
 
 
@@ -135,7 +135,7 @@ rule mm2_quast:
 		conda activate quast_env
 		#cd {params.autobin_dir}/flye_assembly
 	
-		bash /athena/ihlab/scratch/miw4007/simulation_test/tools/snakemake_assembly/meta_quast.sh {params.autobin_dir}/minimap2/mm2_bins/ {params.autobin_dir}/minimap2/flye_assembly/
+		bash ../tools/snakemake_assembly/meta_quast.sh {params.autobin_dir}/minimap2/mm2_bins/ {params.autobin_dir}/minimap2/flye_assembly/
 		"""
 
 
