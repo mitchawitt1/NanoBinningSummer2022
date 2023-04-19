@@ -4,9 +4,11 @@ import sys
 import os
 import argparse
 
-
-### from a list of fasta files, create the genome list (.tsv) required for nanosim and put into config folder
-
+"""
+From a list of fasta files, create the 
+genome list (.tsv) required for nanosim 
+and put into config folder
+"""
 def create_genome_list(fasta_list, out_dir):
     # should return the number of species for abundance calculation and verification
     num_species = 0
@@ -17,7 +19,6 @@ def create_genome_list(fasta_list, out_dir):
         tsv_writer = csv.writer(gl, delimiter='\t')
 
         # open every fasta file in the given list (assumed to local paths only)
-
         for f in fasta_list:
 #             if not os.path.isabs(f):
 #                 path_to_f = cwd + '/' + f
@@ -30,8 +31,11 @@ def create_genome_list(fasta_list, out_dir):
     return num_species, total_length
 
 
-### from a list of fasta files, create the abundance list (.tsv) required for nanosim and put it into config folder
-
+"""
+From a list of fasta files, create the abundance
+list (.tsv) required for nanosim and put it into 
+config folder
+"""
 def create_abundance_list(
     fasta_list,
     num_reads,
@@ -64,8 +68,11 @@ def create_abundance_list(
                 tsv_writer.writerow([record.name, rel_abundance])
 
 
-### from a list of fasta files, create the dna list (.tsv) required for nanosim, and put it into specified config folder
-
+"""
+From a list of fasta files, create the dna
+list (.tsv) required for nanosim, and put
+it into specified config folder
+"""
 def create_dna_list(fasta_list, out_dir):
     out_path = os.path.join(out_dir, 'dl.tsv')
     with open(out_path, 'wt') as dl:
@@ -100,10 +107,6 @@ def ap_handle_args():
     # look for or create a nano_config folder in current directory if not specified
     if outputdir == None:
         outputdir = 'nano_config'
-        
-    # create 1000 reads if not specified
-#     if nreads == None:
-#         nreads = 1000
     
     # coverage should override the number of reads
     if coverage == None:
@@ -113,18 +116,16 @@ def ap_handle_args():
         nreads = None
 
     inputdir = os.path.abspath(inputdir)
-#     print(inputdir)
     fasta_list = []
+    
     # find all fasta/fna files in input directory
     if not(os.path.isdir(inputdir)):
         raise Exception("input directory does not exist")
     else:
         file_list = os.listdir(inputdir)
-#         print(file_list)
         for f in file_list:
             if not(os.path.isdir(f)):
                 ext = os.path.splitext(f)[-1]
-#                 print(ext)
                 if (ext == '.fna') or (ext == '.fasta'):
                     fasta_list.append(os.path.abspath(os.path.join(inputdir, f)))
                 
@@ -139,52 +140,9 @@ def ap_handle_args():
 
     return (fasta_list, nreads, outputdir, coverage)
 
-
-# def handle_args(args):
-    # # Note to self: this code is really ugly, please change this structure with parse arguments or something
-#     if len(args) == 3:
-#         if os.path.isdir(args[2]):
-#             if args[1].isnumeric():
-#                 if os.path.isdir(args[0]):
-#                     return args[0], int(args[1]), args[2]
-#                 else:
-#                     raise Exception
-#             else:
-
-#     if os.path.isdir(args[-1]):
-#         if args[-2].isnumeric():
-#             return args[:-2], int(args[-2]), args[-1]
-#         else:
-#             return args[:-2], 1000, args[-1]
-
-#     else:
-#         if args[-1].isnumeric():
-#             try:
-#                 os.mkdir("nano_config")
-#             except FileExistsError:
-#                 pass
-
-#             return args[:-1], int(args[-1]), 'nano_config'
-
-#         elif args[-2].isnumeric():
-#             try:
-#                 os.mkdir(args[-1])
-#             except FileExistsError:
-#                 pass
-#             return args[:-2], int(args[-2]), args[-1]
-
 def main(argv):
-#     inp_seqs, nreads, out_dir = handle_args(argv)
-#     inp_seqs, nreads, out_dir = ap_handle_args(argv)
-
-    # parses arguments
+    # parsing arguments
     inp_seqs, nreads, out_dir, coverage = ap_handle_args()
-    
-#     print(inp_seqs)
-#     print(inp_seqs)
-#     print(nreads)
-#     print(out_dir)
-
     n, total_length = create_genome_list(inp_seqs, out_dir)
     create_abundance_list(inp_seqs, nreads, n, out_dir, coverage, total_length)
     create_dna_list(inp_seqs, out_dir)
