@@ -24,9 +24,9 @@ rule metabat2:
 		source ~/anaconda3/etc/profile.d/conda.sh
 		conda activate metabat2_env
 		mkdir {params.autobin_dir}/metabat2_bins || true
-		cd {params.autobin_dir}/metabat2_bins
+		#cd {params.autobin_dir}/metabat2_bins
 		
-		bash ../tools/metabat2.sh {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fastq {input.reads1} {input.reads2} metabat2
+		bash ../tools/metabat2.sh {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fastq {input.reads1} {input.reads2} {params.autobin_dir}/metabat2_bins/metabat2
 		"""
 
 rule metabat2_to_AMBER_readable:
@@ -45,9 +45,9 @@ rule metabat2_to_AMBER_readable:
 		source ~/anaconda3/etc/profile.d/conda.sh
 		conda activate AMBER_env
 		mkdir {params.nanopore_reads}/AMBER_results || true
-		cd {params.autobin_dir}/AMBER_results
+		#cd {params.autobin_dir}/AMBER_results
 		
-		python ../tools/get_bin_mappings.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta ../metabat2_bins/metabat2/mags {output} metabat2	
+		python ../tools/get_bin_mappings.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {params.outdir}/metabat2_bins/metabat2/mags {output} metabat2	
 		"""
 
 rule minimap_alignment:
