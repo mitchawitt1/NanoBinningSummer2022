@@ -4,5 +4,7 @@ reference_genomes: "../input_seq/cleaned_seqs"
 error_profile: "../err_profs/metagenome_ERR3152364_Even/metagenome_ERR3152364_Even"
 config_dir: "/nano_config"
 reads_prefix: "mgERR"
+## Average coverage of the Nanosim reads
 coverage: 1.0
+## IMPORTANT: MAKE SURE TO SPECIFY THE NAME AND LOCATION OF THE OUTPUT DIRECTORY YOU WANT TO WORK IN, SHOULD BE THE SAME ACROSS CONFIG.YAML FILES
 sim_outdir: ""
