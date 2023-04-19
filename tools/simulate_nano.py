@@ -1,3 +1,12 @@
+"""
+Uses preproc_nano.py to build a config directory
+and then runs Nanosim to simulate a metagenomic
+sample of nanopore reads
+
+Environment: has to have nanosim installed
+    conda install -c bioconda nanosim
+"""
+
 import preproc_nano
 from Bio import SeqIO
 import csv
