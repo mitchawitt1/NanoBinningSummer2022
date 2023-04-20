@@ -22,7 +22,7 @@ reference_genomes:                  directory that contains reference genomes in
 error_profile:                      directory that contains the error profile files used for nanosim.
 reads_prefix:                       to specify the naming of nanosim files, {reads_prefix}_sample0_aligned_reads.fasta
 coverage:                           default 1.0X
-autobin_dir:                         specify the location and name of the directory that will contain all pipeline outputs, it is very important to keep this consistent across all config files
+autobin_dir:                        specify the location and name of the directory that will contain all pipeline outputs, it is very important to keep this consistent across all config files
 ```
 
 Once the config file is ready, run the Snakefile like any other snakemake pipeline:
