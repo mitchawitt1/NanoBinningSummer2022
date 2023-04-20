@@ -7,5 +7,7 @@ config_dir: "/nano_config"
 reads_prefix: "mgERR"
 ## Average coverage of the Nanosim reads
 coverage: 1.0
+ART_env: "ART_env"
+nano_env: "nanosim_env"
 ## IMPORTANT: MAKE SURE TO SPECIFY THE NAME AND LOCATION OF THE OUTPUT DIRECTORY YOU WANT TO WORK IN, SHOULD BE THE SAME ACROSS CONFIG.YAML FILES
 sim_outdir: ""
