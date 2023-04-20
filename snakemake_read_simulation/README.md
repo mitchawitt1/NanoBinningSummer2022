@@ -18,11 +18,11 @@ If you create your own environments, you have to specify them in ```config.yaml`
 Once all environments are made or installed, the following values may need to be filled out in ```config.yaml``` if anything besides the default parameters want to be used:
 
 ```
-reference_genomes:                  a directory that contains reference genomes in fasta files format, should represent all of the species to included in the simulated reads.
-
-
-
-
+reference_genomes:                  directory that contains reference genomes in fasta files format, should represent all of the species to included in the simulated reads.
+error_profile:                      directory that contains the error profile files used for nanosim.
+reads_prefix:                       to specify the naming of nanosim files, {reads_prefix}_sample0_aligned_reads.fasta
+coverage:                           default 1.0X
+autobin_dir:                         specify the location and name of the directory that will contain all pipeline outputs, it is very important to keep this consistent across all config files
 ```
 
 Once the config file is ready, run the Snakefile like any other snakemake pipeline:
