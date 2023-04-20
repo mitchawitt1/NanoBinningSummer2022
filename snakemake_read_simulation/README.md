@@ -12,10 +12,10 @@ To get a local copy up and running follow these simple example steps.
 
 For now, the project's pipeline uses multiple separate conda environments to use all tools. It is left to the user to manage their environments and specify them to this tool. In this snakefile, two environments need to have ART Illumina and Nanosim on them, the default environments specified in the config.yaml file can be created using the following commands:
 
-"""
+```
 conda create --name nanosim_env -c bioconda nanosim
 conda create --name ART_env -c bioconda art
-"""
+```
 
 
 
