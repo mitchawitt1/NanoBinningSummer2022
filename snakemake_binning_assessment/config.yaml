@@ -1,6 +1,6 @@
-reads_prefix: "nano"
+reads_prefix: "mgERR"
 nanopore_reads: "nanopore_reads"
-autobin_dir: "/../autobin_output"
+autobin_dir: "/athena/ihlab/scratch/miw4007/NanoBinningSummer2022/2S0.1C_autobin_output"
 tax_database: "/athena/masonlab/scratch/databases/metagenomics/CAT_prepare_20210107/2021-01-07_taxonomy"
 CAT_database: "/athena/masonlab/scratch/databases/metagenomics/CAT_prepare_20210107/2021-01-07_CAT_database"
 refseq_genome: "/athena/ihlab/scratch/miw4007/simulation_test/refseq_genomic_combined.fna.gz"

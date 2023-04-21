@@ -33,7 +33,7 @@ rule metabat2_to_AMBER_readable:
 	input:
 		config["autobin_dir"] + "/metabat2_bins/metabat2/mags/unbinned.fa"
 	output:
-		config["autobin_dir"] + "/AMBER_results/metabat2_bins.tsv"
+		config["autobin_dir"] + "/AMBER_results/metabat2_bins.tsv",
 	params:
 		autobin_dir=config["autobin_dir"],
 		reads_prefix=config["reads_prefix"],
@@ -90,7 +90,8 @@ rule f2_to_AMBER_readable:
 		reads_prefix=config["reads_prefix"],
 		nanopore_reads=config["nanopore_reads"]
 	output:
-		expand("{autobin_dir}/AMBER_results/{sam_file}.tsv", autobin_dir=config["autobin_dir"], sam_file=config["mm2_alignment_prefix"])
+		config["autobin_dir"] + "/AMBER_results/" + config["mm2_alignment_prefix"] + ".tsv",
+		config["autobin_dir"] + "/AMBER_results/gsa_mapping.binning"
 	conda:
 		"AMBER_env"
 	shell:
@@ -99,7 +100,7 @@ rule f2_to_AMBER_readable:
 		conda activate AMBER_env
 
 		mkdir {params.autobin_dir}/AMBER_results || true
-		python ../tools/get_bin_mappings.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {input} {output} minimap2
+		python ../tools/get_bin_mappings.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {input} {output[0]} minimap2
 
 		"""
 
@@ -131,7 +132,7 @@ rule CATBAT_to_AMBER_readable:
 		reads_prefix=config["reads_prefix"],
 		nanopore_reads=config["nanopore_reads"]
 	output:
-		expand("{autobin_dir}/AMBER_results/CATBAT_bins.tsv", autobin_dir=config["autobin_dir"])
+		expand("{autobin_dir}/AMBER_results/CATBAT_bins.tsv", autobin_dir=config["autobin_dir"]),
 	conda:
 		"AMBER_env"
 	shell:
@@ -140,11 +141,12 @@ rule CATBAT_to_AMBER_readable:
 		conda activate AMBER_env
 		mkdir {params.autobin_dir}/AMBER_results || true
 
-		python ../tools/get_bin_mappings_species.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {input} {output} CATBAT
+		python ../tools/get_bin_mappings.py {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {input} {output} CATBAT
 
 		"""
 rule AMBER:
 	input:
+		gold_standard=config["autobin_dir"] + "/AMBER_results/gsa_mapping.binning",
 		mb2=config["autobin_dir"] + "/AMBER_results/metabat2_bins.tsv",
 		cb=config["autobin_dir"] + "/AMBER_results/CATBAT_bins.tsv",
 		mm2=config["autobin_dir"] + "/AMBER_results/mm2_mapping.tsv"
@@ -152,7 +154,6 @@ rule AMBER:
 		expand("{autobin_dir}/AMBER_results/index.html", autobin_dir=config["autobin_dir"])
 	params:
 		autobin_dir=config["autobin_dir"],
-		gold_standard=config["autobin_dir"] + "/AMBER_results/gsa_mapping.binning"
 	conda:
 		"AMBER_env"
 	shell:
@@ -162,5 +163,5 @@ rule AMBER:
 		mkdir AMBER_results || true
 		cd AMBER_results
 		
-		amber.py -g {params.gold_standard} {input.mb2} {input.mm2} {input.cb} -o {params.autobin_dir}/AMBER_results/
+		amber.py -g {input.gold_standard} {input.mb2} {input.mm2} {input.cb} -o {params.autobin_dir}/AMBER_results/
 		"""
