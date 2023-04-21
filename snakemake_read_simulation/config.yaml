@@ -8,4 +8,4 @@ reads_prefix: "nano"
 ## Average coverage of the Nanosim reads
 coverage: 1.0
 ## IMPORTANT: MAKE SURE TO SPECIFY THE NAME AND LOCATION OF THE OUTPUT DIRECTORY YOU WANT TO WORK IN, SHOULD BE THE SAME ACROSS CONFIG.YAML FILES
-sim_outdir: "/athena/ihlab/scratch/miw4007/autobin_output"
+autobin_dir: "../autobin_output"
