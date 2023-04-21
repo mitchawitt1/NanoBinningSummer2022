@@ -1,3 +1,3 @@
-reads_prefix: "mgERR"
+reads_prefix: "nano"
 nanopore_reads: "nanopore_reads"
-autobin_dir: ""
+autobin_dir: "/../autobin_output"
