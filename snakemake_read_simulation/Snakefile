@@ -16,11 +16,11 @@ rule simulate_nanopore_reads:
 	output:
 		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	conda:
-		config["nanosim_env"]
+		"nanosim_env"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate config["nanosim_env"]
+		conda activate nanosim_env
 		mkdir {params.outdir}/nanopore_reads || true
 		
 		python ../tools/simulate_nano.py --inputdir {params.reference_genomes} --coverage {params.coverage} --configdir {params.outdir}/nano_config --profile {params.error_profile} --outdir {params.outdir}/nanopore_reads/{params.prefix}
@@ -43,11 +43,11 @@ rule art_illumina_sim:
 		expand("{outdir}/ART_reads/illumina_sim1.fq", outdir=config["sim_outdir"]),
 		expand("{outdir}/ART_reads/illumina_sim2.fq", outdir=config["sim_outdir"])
 	conda:
-		config["ART_env"]
+		"ART_env"
 	shell:
 		"""	
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate config["ART_env"]
+		conda activate ART_env
 		mkdir {params.illumina_sim_dir} || true
 		art_illumina -p -sam -i {input} -o {params.illumina_sim_dir}/illumina_sim -l 50 -f 20 -m 200 -s 10
 		"""

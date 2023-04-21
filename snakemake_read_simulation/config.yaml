@@ -1,13 +1,11 @@
 ## A directory which lists a bunch of fasta files that each represent the reference genome of a species. The Snakefile will take all fasta files found in this directory only.
-reference_genomes: "/athena/ihlab/store/miw4007/simulation_test/input_seq/cleaned_seqs/" 
+reference_genomes: "/athena/ihlab/store/miw4007/simulation_test/input_seq/cleaned_seqs/2Spec/" 
 ## Specify the error profile that Nanosim uses, the following is for metagenomic samples with even abundance distributions
 error_profile: "/athena/ihlab/store/miw4007/simulation_test/err_profs/metagenome_ERR3152364_Even/metagenome_ERR3152364_Even"
 config_dir: "/nano_config"
 ## Specify the prefix used for Nanosim files, which should look like "{reads_prefix}_sample0_aligned_reads.fasta"
 reads_prefix: "mgERR"
 ## Average coverage of the Nanosim reads
-coverage: 1.0
-ART_env: "ART_env"
-nano_env: "nanosim_env"
+coverage: 0.1
 ## IMPORTANT: MAKE SURE TO SPECIFY THE NAME AND LOCATION OF THE OUTPUT DIRECTORY YOU WANT TO WORK IN, SHOULD BE THE SAME ACROSS CONFIG.YAML FILES
-sim_outdir: "/../autobin_output"
+sim_outdir: "/athena/ihlab/scratch/miw4007/2S0.1C_autobin_output"
