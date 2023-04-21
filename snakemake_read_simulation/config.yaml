@@ -4,8 +4,8 @@ reference_genomes: "/athena/ihlab/store/miw4007/simulation_test/input_seq/cleane
 error_profile: "/athena/ihlab/store/miw4007/simulation_test/err_profs/metagenome_ERR3152364_Even/metagenome_ERR3152364_Even"
 config_dir: "/nano_config"
 ## Specify the prefix used for Nanosim files, which should look like "{reads_prefix}_sample0_aligned_reads.fasta"
-reads_prefix: "mgERR"
+reads_prefix: "nano"
 ## Average coverage of the Nanosim reads
-coverage: 0.1
+coverage: 1.0
 ## IMPORTANT: MAKE SURE TO SPECIFY THE NAME AND LOCATION OF THE OUTPUT DIRECTORY YOU WANT TO WORK IN, SHOULD BE THE SAME ACROSS CONFIG.YAML FILES
-sim_outdir: "/athena/ihlab/scratch/miw4007/2S0.1C_autobin_output"
+sim_outdir: "/athena/ihlab/scratch/miw4007/autobin_output"
