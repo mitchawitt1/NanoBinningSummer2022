@@ -27,6 +27,8 @@ rule metabat2:
 		#cd {params.autobin_dir}/metabat2_bins
 		
 		bash ../tools/metabat2.sh {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fastq {input.reads1} {input.reads2} {params.autobin_dir}/metabat2_bins/metabat2
+
+		ls {params.autobin_dir}/metabat2_bins/metabat2/mags/ | grep -E "bin.[0-9]*.fa" > {params.autobin_dir}/metabat2_bins_temp
 		"""
 
 rule metabat2_to_AMBER_readable:
@@ -149,7 +151,7 @@ rule AMBER:
 		gold_standard=config["autobin_dir"] + "/AMBER_results/gsa_mapping.binning",
 		mb2=config["autobin_dir"] + "/AMBER_results/metabat2_bins.tsv",
 		cb=config["autobin_dir"] + "/AMBER_results/CATBAT_bins.tsv",
-		mm2=config["autobin_dir"] + "/AMBER_results/mm2_mapping.tsv"
+		mm2=config["autobin_dir"] + "/AMBER_results/" + config["mm2_alignment_prefix"] + ".tsv"
 	output:
 		expand("{autobin_dir}/AMBER_results/index.html", autobin_dir=config["autobin_dir"])
 	params:
@@ -163,5 +165,8 @@ rule AMBER:
 		mkdir AMBER_results || true
 		cd AMBER_results
 		
-		amber.py -g {input.gold_standard} {input.mb2} {input.mm2} {input.cb} -o {params.autobin_dir}/AMBER_results/
+		
+		
+		amber.py -g {input.gold_standard} {input.mb2} {input.cb} {input.mm2} -o {params.autobin_dir}/AMBER_results/
+
 		"""
