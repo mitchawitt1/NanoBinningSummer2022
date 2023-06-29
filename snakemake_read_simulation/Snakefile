@@ -10,7 +10,7 @@ rule simulate_nanopore_reads:
 		config_dir=config["config_dir"],
 		coverage=config["coverage"],
 		error_profile=config["error_profile"],
-		outdir=config["autobin_dir"],
+		outdir=config["sim_outdir"],
 		prefix=config["reads_prefix"],
 		reference_genomes=config["reference_genomes"]
 	output:
@@ -28,20 +28,20 @@ rule simulate_nanopore_reads:
 
 rule convert_fastq_to_fasta:
 	input:
-		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["autobin_dir"], reads_prefix=config["reads_prefix"])
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fastq", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	output:
-		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["autobin_dir"], reads_prefix=config["reads_prefix"])
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	shell:
 		"sed -n \'1~4s/^@/>/p;2~4p\' \"{input}\" > \"{output}\""
 
 rule art_illumina_sim:
 	input:
-		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["autobin_dir"], reads_prefix=config["reads_prefix"])
+		expand("{outdir}/nanopore_reads/{reads_prefix}_sample0_aligned_reads.fasta", outdir=config["sim_outdir"], reads_prefix=config["reads_prefix"])
 	params:
-		illumina_sim_dir=expand("{outdir}/ART_reads", outdir=config["autobin_dir"])
+		illumina_sim_dir=expand("{outdir}/ART_reads", outdir=config["sim_outdir"])
 	output:
-		expand("{outdir}/ART_reads/illumina_sim1.fq", outdir=config["autobin_dir"]),
-		expand("{outdir}/ART_reads/illumina_sim2.fq", outdir=config["autobin_dir"])
+		expand("{outdir}/ART_reads/illumina_sim1.fq", outdir=config["sim_outdir"]),
+		expand("{outdir}/ART_reads/illumina_sim2.fq", outdir=config["sim_outdir"])
 	conda:
 		"ART_env"
 	shell:
