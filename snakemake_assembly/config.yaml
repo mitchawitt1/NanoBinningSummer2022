@@ -1,3 +1,4 @@
-reads_prefix: "nano"
+reads_prefix: "mgERR"
 nanopore_reads: "nanopore_reads"
-autobin_dir: "/../autobin_output"
+autobin_dir: "/athena/ihlab/scratch/miw4007/NanoBinningSummer2022/new_10S10C_autobin_output_1"
+simulation_references: "/athena/ihlab/scratch/miw4007/NanoBinningSummer2022/10Spec_simulated_references.fna"

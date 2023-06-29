@@ -25,11 +25,10 @@ for bin_num in ${BINS[@]}; do
 	if [ ! -d $ASSEMBLY_OUTPUT/bin$bin_num/ ]
 	then
 		mkdir $ASSEMBLY_OUTPUT/bin$bin_num/
-		flye --nano-raw $BINS_PATH/bin."$bin_num".fa -o $ASSEMBLY_OUTPUT/bin$bin_num/
+		flye --nano-raw $BINS_PATH/bin."$bin_num".fa --meta -o $ASSEMBLY_OUTPUT/bin$bin_num/ || true
 	elif [ ! -f $ASSEMBLY_OUTPUT/bin$bin_num/assembly_graph.gfa ]
 	then
-		flye --nano-raw $BINS_PATH/bin."$bin_num".fa -o $ASSEMBLY_OUTPUT/bin$bin_num/
+		flye --nano-raw $BINS_PATH/bin."$bin_num".fa --meta -o $ASSEMBLY_OUTPUT/bin$bin_num/ || true
 	fi
 done
-
 

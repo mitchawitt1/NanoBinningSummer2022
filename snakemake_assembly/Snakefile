@@ -1,18 +1,24 @@
 configfile: "config.yaml"
 
+
+
 rule all:
 	input:
-		#config["autobin_dir"] + "/flye_assembly/quast_results/report.html"
-		#config["autobin_dir"] + "/CATBAT/CATBAT_bins/bin.0.fa"
-		#config["autobin_dir"] + "/minimap2/flye_assembly/bin0/assembly_graph.gfa",
-		#config["autobin_dir"] + "/CATBAT/flye_assembly/bin0/assembly_graph.gfa"
-		config["autobin_dir"] + "/CATBAT/flye_assembly/bin0/quast_results/report.html"
+		#config["autobin_dir"] + "/flye_assembly/quast_results/report.html",
+		#config["autobin_dir"] + "/CATBAT_quasts_temp",
+		#config["autobin_dir"] + "/mm2_quasts_temp",
+		#config["autobin_dir"] + "/metabat2_quasts_temp"
+		#config["autobin_dir"] + "/CATBAT/CATBAT_assemblies.fasta"
+		#config["autobin_dir"] + "/quast_results/report.html"
+		config["autobin_dir"] + "/quast_results/report.html"
+
+
 
 rule mm2_map_to_bin:
 	input:
 		config["autobin_dir"] + "/AMBER_results/mm2_mapping.tsv"
 	output:
-		config["autobin_dir"] + "/minimap2/mm2_bins/bin.0.fa"
+		config["autobin_dir"] + "/mm2_bins_temp"
 	params:
 		autobin_dir=config["autobin_dir"],
 		reads_prefix=config["reads_prefix"],
@@ -22,31 +28,39 @@ rule mm2_map_to_bin:
 		source ~/anaconda3/etc/profile.d/conda.sh
 		mkdir {params.autobin_dir}/minimap2/mm2_bins/ || true
 
-		python ../tools/mm2_mapping_to_bins.py {params.autobin_dir}/AMBER_results/mm2_mapping.tsv {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {params.autobin_dir}/minimap2/mm2_bins/
-		"""
+		python ../tools/mm2_mapping_to_bins.py {params.autobin_dir}/AMBER_results/mm2_mapping.tsv {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {params.autobin_dir}/minimap2/mm2_bins
+
+		ls {params.autobin_dir}/minimap2/mm2_bins/ | grep -E "bin.[0-9]*.fa" > {output}
+"""
+
+
 
 rule CATBAT_map_to_bin:
 	input:
 		config["autobin_dir"] + "/AMBER_results/CATBAT_bins.tsv"
 	output:
-		config["autobin_dir"] + "/CATBAT/CATBAT_bins/bin.0.fa"
+		config["autobin_dir"] + "/CATBAT_bins_temp"
 	params:
 		autobin_dir=config["autobin_dir"],
 		reads_prefix=config["reads_prefix"],
 		nanopore_reads=config["nanopore_reads"]
 	shell:
 		"""
-		mkdir {params.autobin_dir}/minimap2/mm2_bins/ || true
+		mkdir {params.autobin_dir}/CATBAT/CATBAT_bins/ || true
 
-		python ../tools/CATBAT_mapping_to_bins.py {params.autobin_dir}/AMBER_results/CATBAT_bins.tsv {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {params.autobin_dir}/CATBAT/CATBAT_bins/
+		python ../tools/CATBAT_mapping_to_bins.py {params.autobin_dir}/AMBER_results/CATBAT_bins.tsv {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta {params.autobin_dir}/CATBAT/CATBAT_bins
+
+		ls {params.autobin_dir}/CATBAT/CATBAT_bins/ | grep -E "bin.[0-9]*.fa" > {output}
 		"""
+
+
 
 
 rule raw_flye_assembly:
 	input:
 		config["autobin_dir"] + "/" + config["nanopore_reads"] + "/" + config["reads_prefix"] + "_sample0_aligned_reads.fasta"
 	output:
-		config["autobin_dir"] + "/flye_assembly/assembly_graph.gfa"
+		config["autobin_dir"] + "/flye_assembly/assembly.fasta"
 	params:
 		autobin_dir=config["autobin_dir"],
 		reads_prefix=config["reads_prefix"],
@@ -57,17 +71,19 @@ rule raw_flye_assembly:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
 		conda activate flye_env
-		mkdir {params.nanopore_reads}/flye_assembly || true
+		mkdir {params.autobin_dir}/{params.nanopore_reads}/flye_assembly || true
 		
-		flye --nano-raw {params.autobin_dir}/{params.nanopore_reads}/{params.reads_prefix}_sample0_aligned_reads.fasta --out-dir {params.autobin_dir}/flye_assembly --threads 4
+		flye --nano-raw {params.autobin_dir}/nanopore_reads/{params.reads_prefix}_sample0_aligned_reads.fasta --meta --out-dir {params.autobin_dir}/flye_assembly --threads 4
 		"""
+
+
 
 
 rule mm2_flye_assembly:
 	input:
-		config["autobin_dir"] + "/minimap2/mm2_bins/bin.0.fa"
+		config["autobin_dir"] + "/mm2_bins_temp"
 	output:
-		config["autobin_dir"] + "/minimap2/flye_assembly/bin0/assembly_graph.gfa"
+		config["autobin_dir"] + "/mm2_assemblies_temp"
 	params:
 		autobin_dir=config["autobin_dir"],
 	conda:
@@ -78,15 +94,18 @@ rule mm2_flye_assembly:
 		conda activate flye_env
 		mkdir {params.autobin_dir}/minimap2/flye_assembly/ || true
 		
-		bash  ../tools/snakemake_assembly/meta_assembly.sh {params.autobin_dir}/minimap2/mm2_bins/ {params.autobin_dir}/minimap2/flye_assembly/
+		bash meta_assembly.sh {params.autobin_dir}/minimap2/mm2_bins {params.autobin_dir}/minimap2/flye_assembly || true
+
+		ls {params.autobin_dir}/minimap2/flye_assembly/ | grep -E "bin[0-9]*" > {output}
 		"""
+
 
 
 rule CATBAT_flye_assembly:
 	input:
-		config["autobin_dir"] + "/CATBAT/CATBAT_bins/bin.0.fa"
+		config["autobin_dir"] + "/CATBAT_bins_temp"
 	output:
-		config["autobin_dir"] + "/CATBAT/flye_assembly/bin0/assembly_graph.gfa"
+		config["autobin_dir"] + "/CATBAT_assemblies_temp"
 	params:
 		autobin_dir=config["autobin_dir"],
 	conda:
@@ -97,61 +116,140 @@ rule CATBAT_flye_assembly:
 		conda activate flye_env
 		mkdir {params.autobin_dir}/CATBAT/flye_assembly/ || true
 		
-		bash ../tools/snakemake_assembly/meta_assembly.sh {params.autobin_dir}/CATBAT/CATBAT_bins/ {params.autobin_dir}/CATBAT/flye_assembly/
+		bash meta_assembly.sh {params.autobin_dir}/CATBAT/CATBAT_bins {params.autobin_dir}/CATBAT/flye_assembly || true
+		
+		ls {params.autobin_dir}/CATBAT/flye_assembly/ | grep -E "bin[0-9]*" > {output}
+
 		"""
 
-rule CATBAT_quast:
+
+
+
+rule metabat2_flye_assembly:
 	input:
-		config["autobin_dir"] + "/CATBAT/flye_assembly/bin0/assembly_graph.gfa"
+		config["autobin_dir"] + "/metabat2_bins_temp"
 	output:
-		config["autobin_dir"] + "/CATBAT/flye_assembly/bin0/quast_results/report.html"
+		config["autobin_dir"] + "/metabat2_assemblies_temp"
 	params:
 		autobin_dir=config["autobin_dir"],
 	conda:
-		"quast_env"
+		"flye_env"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate quast_env
-		#cd {params.autobin_dir}/CATBAT/flye_assembly
-	
-		bash ../tools/snakemake_assembly/meta_quast.sh {params.autobin_dir}/CATBAT/CATBAT_bins/ {params.autobin_dir}/CATBAT/flye_assembly/
+		conda activate flye_env
+		mkdir {params.autobin_dir}/metabat2_bins/flye_assembly/ || true
+		
+		bash meta_assembly.sh {params.autobin_dir}/metabat2_bins/metabat2/mags {params.autobin_dir}/metabat2_bins/flye_assembly || true
+
+		ls {params.autobin_dir}/metabat2_bins/flye_assembly/ | grep -E "bin[0-9]*" > {output}
 		"""
+
+
+
+
+rule CATBAT_quast:
+	input:
+		config["autobin_dir"] + "/CATBAT_assemblies_temp"
+	output:
+		config["autobin_dir"] + "/CATBAT/CATBAT_assemblies.fasta"
+	params:
+		autobin_dir=config["autobin_dir"],
+		simulation_references=config["simulation_references"],
+		temp=config["autobin_dir"] + "/CATBAT/CB_temp.fasta"
+	shell:
+		"""
+		source ~/anaconda3/etc/profile.d/conda.sh
+
+		while read BIN
+		do
+			FASTA_LOC="{params.autobin_dir}/CATBAT/flye_assembly/$BIN/assembly.fasta" 
+			if [ -f "$FASTA_LOC" ]; then
+				cat "$FASTA_LOC" >> {params.temp} 
+			fi
+		done < {params.autobin_dir}/CATBAT_assemblies_temp
+				
+		bash contig_header.sh {params.temp} > {output}
+		rm {params.temp}
+		"""
+
+
 
 
 rule mm2_quast:
 	input:
-		config["autobin_dir"] + "/minimap2/flye_assembly/bin0/assembly_graph.gfa"
+		config["autobin_dir"] + "/mm2_assemblies_temp"
 	output:
-		config["autobin_dir"] + "/minimap2/flye_assembly/bin0/quast_results/report.html"
+		config["autobin_dir"] + "/minimap2/mm2_assemblies.fasta"
 	params:
 		autobin_dir=config["autobin_dir"],
-	conda:
-		"quast_env"
+		simulation_references=config["simulation_references"],
+		temp=config["autobin_dir"] + "/minimap2/mm2_temp.fasta"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
-		conda activate quast_env
-		#cd {params.autobin_dir}/flye_assembly
-	
-		bash ../tools/snakemake_assembly/meta_quast.sh {params.autobin_dir}/minimap2/mm2_bins/ {params.autobin_dir}/minimap2/flye_assembly/
+
+		while read BIN
+		do
+			FASTA_LOC="{params.autobin_dir}/minimap2/flye_assembly/$BIN/assembly.fasta" 
+			if [ -f "$FASTA_LOC" ]; then
+				cat "$FASTA_LOC" >> {params.temp} 
+			fi
+		done < {params.autobin_dir}/mm2_assemblies_temp
+				
+		bash contig_header.sh {params.temp} > {output}
+		rm {params.temp}
 		"""
+
+
+
+
+rule metabat2_quast:
+	input:
+		config["autobin_dir"] + "/metabat2_assemblies_temp"
+	output:
+		config["autobin_dir"] + "/metabat2_bins/metabat2_assemblies.fasta"
+	params:
+		autobin_dir=config["autobin_dir"],
+		simulation_references=config["simulation_references"],
+		temp=config["autobin_dir"] + "/metabat2_bins/mb2_temp.fasta"
+	shell:
+		"""
+		source ~/anaconda3/etc/profile.d/conda.sh
+
+		while read BIN
+		do
+			FASTA_LOC="{params.autobin_dir}/metabat2_bins/flye_assembly/$BIN/assembly.fasta" 
+			if [ -f "$FASTA_LOC" ]; then
+				cat "$FASTA_LOC" >> {params.temp} 
+			fi
+		done < {params.autobin_dir}/metabat2_assemblies_temp
+				
+		bash contig_header.sh {params.temp} > {output}
+		rm {params.temp}
+		"""
+
+
 
 
 rule metaquast:
 	input:
-		config["autobin_dir"] + "/flye_assembly/assembly_graph.gfa"
+		raw=config["autobin_dir"] + "/flye_assembly/assembly.fasta",
+		#cb=config["autobin_dir"] + "/CATBAT/CATBAT_assemblies.fasta",
+		#mm2=config["autobin_dir"] + "/minimap2/mm2_assemblies.fasta",
+		mb2=config["autobin_dir"] + "/metabat2_bins/metabat2_assemblies.fasta"
 	output:
-		config["autobin_dir"] + "/flye_assembly/quast_results/report.html"
+		config["autobin_dir"] + "/quast_results/report.html"
 	params:
-		autobin_dir=config["autobin_dir"]
+		autobin_dir=config["autobin_dir"],
+		simulation_references=config["simulation_references"]
 	conda:
 		"quast_env"
 	shell:
 		"""
 		source ~/anaconda3/etc/profile.d/conda.sh
 		conda activate quast_env
-		cd {params.autobin_dir}/flye_assembly
-		quast assembly.fasta -o quast_results/
+		# cd {params.autobin_dir}/flye_assembly
+		metaquast {input.raw} {input.mb2} -r {params.simulation_references} -o {params.autobin_dir}/quast_results/ 
 		"""
 
